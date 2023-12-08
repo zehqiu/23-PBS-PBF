@@ -14,6 +14,7 @@ color = (1.0, 1.0, 1.0)
 ps = particle_system()
 print(fluid_blocks_1_z)
 ps.init_particles()
+ps.add_rigid_body()
 solver = pbf(ps)
 
 # Water tank parameters
@@ -66,7 +67,7 @@ while window.running:
     canvas.set_background_color((1, 1, 1))
     scene.set_camera(camera)
     scene.ambient_light((0.8, 0.8, 0.8))
-    scene.point_light(pos=(0.5, 1.5, 1.5), color=(1, 1, 1))
+    scene.point_light(pos=(5, 15, 15), color=(1, 1, 1))
     
     # 小窗
     with gui.sub_window("Sub Window", x=0, y=0, width=0.15, height=1):
@@ -82,7 +83,9 @@ while window.running:
     if run_simulate == 1:
         solver.run_PBF()
     # 示范用例
-    scene.particles(ps.positions, radius = particle_radius*1.1)
+    # 用per_vertex_color给颜色数组
+    scene.particles(ps.positions, per_vertex_color=ps.colors,radius = particle_radius)
+    scene.particles(ps.voxelized_points, color = (0.68, 0.26, 0.19), radius = particle_radius)
     
     # draw water-tank
     scene.lines(tank_vertex, width=3.0, indices=tank_edge, color=(0, 0, 0))

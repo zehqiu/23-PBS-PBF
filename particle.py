@@ -2,6 +2,7 @@
 import taichi as ti
 from config import *
 import numpy as np
+import trimesh as tm
 
 @ti.data_oriented
 class Material:
@@ -58,6 +59,17 @@ class particle_system():
             # self.colors[i] = ti.Vector([0,0,1])
         # self.board_states = ti.Vector([boundary[0] - epsilon, -0.0, 0.0])
     
+    def add_rigid_body(self,scale_factor=15.0,displacement_factor=[10,0,10]):
+        mesh = tm.load(rigid_body_path)
+        mesh.vertices *= scale_factor
+        mesh.vertices += np.array(displacement_factor)
+        voxelized_mesh = mesh.voxelized(pitch=2*particle_radius).fill()
+        voxelized_points_np = voxelized_mesh.points.astype(np.float32)
+        # voxelized_points_np *= scale_factor  # Scale the positions
+        num_particles_obj = voxelized_points_np.shape[0]
+        self.voxelized_points = ti.Vector.field(dim, ti.f32, num_particles_obj)
+        self.voxelized_points.from_numpy(voxelized_points_np)
+
     # function handling boundary conditions
     @ti.func
     def confine_position_to_boundary(self,p):

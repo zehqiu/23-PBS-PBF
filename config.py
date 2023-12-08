@@ -55,6 +55,8 @@ for i in range(dim):
 max_num_particles_per_cell = 100
 max_num_neighbors = 100
 
+rigid_body_path = "./Dragon_50k.obj"
+num_particles_obj = 0
 
 # PBF parameters
 # kernel radius
