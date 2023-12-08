@@ -1,6 +1,7 @@
 # this file includes some initial state of the structure.
 import math
 import taichi as ti
+import numpy as np
 # Taichi parameter
 device = 'gpu'
 
@@ -9,18 +10,17 @@ dim = 3
 # gravity
 gravity = ti.Vector([0,-9.8,0])
 # time step slot
-time_delta = 1.0 / 20.0
+time_delta = 1.0 / 200.0
 # epsilon in equation
 epsilon = 1e-5
 
 # water tank parameters
 tank_width, tank_height, tank_depth = 50, 30, 30
 # boundary
-boundary = (tank_width, tank_height, tank_depth)
+boundary = (tank_depth, tank_height, tank_width)
 
 cell_size = 2.5
 cell_recpr = 1.0 / cell_size
-
 
 def round_up(f, s):
     return (math.floor(f * cell_recpr / s) + 1) * s
@@ -33,14 +33,24 @@ background_color = (1.0, 1.0, 1.0)
 
 # particle parameters
 # The radius of particle
-particle_radius = 0.1
+particle_radius = 0.15
+particle_diameter = 2*particle_radius
+delta = particle_diameter * 3.0
 # The number of fluid particles
 fluid_blocks = 1
-fluid_block_loc = (10,20,10)
-N_fluid_block_x = 10
-N_fluid_block_y = 30
-N_fluid_block_z = 30
-N_fluid_particles = N_fluid_block_x * N_fluid_block_y * N_fluid_block_z
+fluid_block_loc = (0,0,0)
+fluid_blocks_1_start = [5,10,5]
+fluid_blocks_1_end = [15, 15, 15]
+
+fluid_blocks_1_x = len(np.arange(fluid_blocks_1_start[0], fluid_blocks_1_end[0], delta))
+fluid_blocks_1_y = len(np.arange(fluid_blocks_1_start[1], fluid_blocks_1_end[1], delta))
+fluid_blocks_1_z = len(np.arange(fluid_blocks_1_start[2], fluid_blocks_1_end[2], delta))
+
+N_fluid_particles = 1
+
+for i in range(dim):
+    N_fluid_particles *= len(np.arange(fluid_blocks_1_start[i], fluid_blocks_1_end[i], delta))
+
 # pre-defined parameter
 max_num_particles_per_cell = 100
 max_num_neighbors = 100

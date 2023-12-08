@@ -12,6 +12,7 @@ color = (1.0, 1.0, 1.0)
 
 # create particles
 ps = particle_system()
+print(fluid_blocks_1_z)
 ps.init_particles()
 solver = pbf(ps)
 
@@ -59,7 +60,7 @@ gravity = ti.Vector.field(2, ti.f32, shape=())
 attractor_strength = ti.field(ti.f32, shape=())
 run_simulate = 0
 
-while window.running:    
+while window.running:
     # 初始化设置
     camera.track_user_inputs(window, movement_speed=0.03, hold_key=ti.ui.RMB)
     canvas.set_background_color((1, 1, 1))
@@ -81,7 +82,7 @@ while window.running:
     if run_simulate == 1:
         solver.run_PBF()
     # 示范用例
-    scene.particles(ps.positions, radius = particle_radius)
+    scene.particles(ps.positions, radius = particle_radius*1.1)
     
     # draw water-tank
     scene.lines(tank_vertex, width=3.0, indices=tank_edge, color=(0, 0, 0))

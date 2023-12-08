@@ -1,6 +1,7 @@
 # deal with particles
 import taichi as ti
 from config import *
+import numpy as np
 
 @ti.data_oriented
 class Material:
@@ -38,19 +39,23 @@ class particle_system():
         ti.root.dense(ti.i, N_fluid_particles).place(self.lambdas, self.position_deltas)
         # ti.root.place(self.board_states)    
     
-    @ti.kernel
+
     def init_particles(self):
         for i in range(N_fluid_particles):
-            delta = h * 0.8
-            offs = ti.Vector([(boundary[0] - delta * N_fluid_block_x) * 0.5,
-                              (boundary[1] - delta * N_fluid_block_x) * 0.5,
-                              boundary[2] * 0.02])
-            self.positions[i] = ti.Vector([i % N_fluid_block_x,
-                                           i % (N_fluid_block_x * N_fluid_block_y),
-                                           i // (N_fluid_block_x * N_fluid_block_y)]) * delta + offs
-            for c in ti.static(range(dim)):
-                self.velocities[i][c] = (ti.random() - 0.5) * 4
-            self.colors[i] = ti.Vector([0,0,1])
+            y = i // (fluid_blocks_1_x * fluid_blocks_1_z)
+            z = (i // fluid_blocks_1_x) % fluid_blocks_1_z
+            x = i % (fluid_blocks_1_x)
+            posx = fluid_blocks_1_start[0] + x * delta
+            posy = fluid_blocks_1_start[1] + y * delta
+            posz = fluid_blocks_1_start[2] + z * delta
+            self.positions[i] = ti.Vector([posx, posy,posz])
+
+            # self.positions[i] = ti.Vector([i % fluid_blocks_1_end[0],
+            #                                i % (fluid_blocks_1_end[0] * fluid_blocks_1_end[2]),
+            #                                i // (fluid_blocks_1_end[0] * fluid_blocks_1_end[2])]) * delta
+            # for c in ti.static(range(dim)):
+            # self.velocities[i] = ti.Vector([0, -10, 0])
+            # self.colors[i] = ti.Vector([0,0,1])
         # self.board_states = ti.Vector([boundary[0] - epsilon, -0.0, 0.0])
     
     # function handling boundary conditions
