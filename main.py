@@ -3,6 +3,7 @@ import taichi as ti
 from config import *
 from particle import particle_system
 from pbf import pbf
+import os
 
 ti.init(arch=ti.gpu)  # 确定后端
 
@@ -14,7 +15,7 @@ color = (1.0, 1.0, 1.0)
 ps = particle_system()
 print(fluid_blocks_1_z)
 ps.init_particles()
-ps.add_rigid_body()
+# ps.add_rigid_body()
 solver = pbf(ps)
 
 # Water tank parameters
@@ -60,6 +61,9 @@ camera.lookat(30, 20, 30)
 gravity = ti.Vector.field(2, ti.f32, shape=())
 attractor_strength = ti.field(ti.f32, shape=())
 run_simulate = 0
+step_count = 0
+output_as_ply = 0
+current_directory = os.path.dirname(os.path.realpath(__file__))
 
 while window.running:
     # 初始化设置
@@ -72,20 +76,25 @@ while window.running:
     # 小窗
     with gui.sub_window("Sub Window", x=0, y=0, width=0.15, height=1):
         gui.text("Some interaction guidance")
-        select_point_mode = gui.button("Select Particles")
-        explosion_mode = gui.button("Explosion")
+        start_simulation = gui.button("Start Simulation")
+        export_as_ply = gui.button("Export as PLY")
+        reset_scene = gui.button("reset_scene")
 
         # value = gui.slider_float("name1", value, minimum=0, maximum=100)
         # color = gui.color_edit_3("name2", color)
     
-    if select_point_mode:
+    if start_simulation:
         run_simulate = 1
     if run_simulate == 1:
+        step_count = step_count + 1
         solver.run_PBF()
+    if export_as_ply:
+        output_as_ply = 1
+        count_output = 0
     # 示范用例
     # 用per_vertex_color给颜色数组
     scene.particles(ps.positions, per_vertex_color=ps.colors,radius = particle_radius)
-    scene.particles(ps.voxelized_points, color = (0.68, 0.26, 0.19), radius = particle_radius)
+    # scene.particles(ps.voxelized_points, color = (0.68, 0.26, 0.19), radius = particle_radius)
     
     # draw water-tank
     scene.lines(tank_vertex, width=3.0, indices=tank_edge, color=(0, 0, 0))
@@ -110,6 +119,28 @@ while window.running:
     # ...
     if window.is_pressed(ti.ui.LMB):
         pass      
-        
+
+    if reset_scene:
+        ps.init_particles()
+        step_count = 0
+        run_simulate = 0
+        output_as_ply = 0
+
+    if run_simulate==1:
+        if output_as_ply == 1:
+            if step_count % outputInterval == 0:
+                if(count_output==0):
+                    os.makedirs(os.path.join(current_directory,"output"), exist_ok=True)
+
+                np_pos = np.reshape(ps.positions.to_numpy(), (N_fluid_particles, 3))
+                np_rgb = np.reshape(ps.colors.to_numpy(), (N_fluid_particles, 3))
+                # create a PLYWriter
+                writer = ti.tools.PLYWriter(num_vertices=N_fluid_particles)
+                writer.add_vertex_pos(np_pos[:, 0], np_pos[:, 1], np_pos[:, 2])
+                writer.add_vertex_color(
+                    np_rgb[:, 0], np_rgb[:, 1], np_rgb[:, 2])
+                writer.export_frame_ascii(count_output, os.path.join(current_directory,series_prefix))
+                count_output = count_output + 1
+    
     canvas.scene(scene)
     window.show()

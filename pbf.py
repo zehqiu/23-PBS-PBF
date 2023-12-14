@@ -12,6 +12,8 @@ from config import *
 class pbf:
     def __init__(self, ps):
         self.ps = ps
+        self.omegas = ti.Vector.field(dim, float)
+        ti.root.dense(ti.i, N_fluid_particles).place(self.omegas)
         
     @ti.kernel
     def prologue(self):
@@ -75,6 +77,55 @@ class pbf:
         # no vorticity/xsph because we cannot do cross product in 2D...
 
     @ti.kernel
+    def apply_vorticity_confinement(self):
+        # compute omega
+        for p_i in self.ps.positions:
+            pos_i = self.ps.positions[p_i]
+            self.omegas[p_i] = pos_i * 0.0
+            for j in range(self.ps.particle_num_neighbors[p_i]):
+                p_j = self.ps.particle_neighbors[p_i, j]
+                if p_j < 0:
+                    break
+                pos_ji = pos_i - self.ps.positions[p_j]
+                grad_j = spiky_gradient(pos_ji, h)
+                vij = self.ps.velocities[p_j] - self.ps.velocities[p_i]
+                self.omegas[p_i]+= ti.math.cross(vij,grad_j)
+
+        for p_i in self.ps.positions:
+            omega_i = self.omegas[p_i]
+            if(omega_i.norm()<epsilon):
+                continue
+            eta = self.ps.positions[p_i] * 0.0
+            for j in range(self.ps.particle_num_neighbors[p_i]):
+                p_j = self.ps.particle_neighbors[p_i, j]
+                if p_j < 0:
+                    break
+                pos_ji = self.ps.positions[p_i] - self.ps.positions[p_j]
+                grad_j = spiky_gradient(pos_ji, h)
+                vij = self.ps.velocities[p_j] - self.ps.velocities[p_i]
+                eta+=grad_j * ti.math.length(omega_i)
+            if(eta.norm()<epsilon):
+                continue
+            N = ti.math.normalize(eta)
+            f = vorticity_confinement_epsilon * ti.math.cross(N,omega_i)
+            self.ps.velocities[p_i]+= f / mass * time_delta
+   
+    @ti.kernel
+    def apply_xsph_viscosity(self):
+        for p_i in self.ps.positions:
+            x_vesc = self.ps.positions[p_i] * 0.0
+            pos_i = self.ps.positions[p_i]
+            for j in range(self.ps.particle_num_neighbors[p_i]):
+                p_j = self.ps.particle_neighbors[p_i, j]
+                if p_j < 0:
+                    break
+                vij = self.ps.velocities[p_j] - self.ps.velocities[p_i]
+                pos_ji = pos_i - self.ps.positions[p_j]
+                vij *= poly6_value(pos_ji.norm(), h)
+                x_vesc+= vij
+            self.ps.velocities[p_i]+=XSPH_c*x_vesc
+
+    @ti.kernel
     def PBF_solver(self):
         # compute lambdas
         # Eq (8) ~ (11)
@@ -130,3 +181,5 @@ class pbf:
         for _ in range(pdf_num_iters):
             self.PBF_solver()
         self.epilogue()
+        # self.apply_vorticity_confinement()
+        # self.apply_xsph_viscosity()

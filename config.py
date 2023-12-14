@@ -35,7 +35,7 @@ background_color = (1.0, 1.0, 1.0)
 # The radius of particle
 particle_radius = 0.15
 particle_diameter = 2*particle_radius
-delta = particle_diameter * 3.0
+delta = particle_diameter * 3.5
 # The number of fluid particles
 fluid_blocks = 1
 fluid_block_loc = (0,0,0)
@@ -115,3 +115,8 @@ def compute_scorr(pos_ji):
     # pow(x, 4)
     x = ti.pow(x,4)
     return (corrK) * x
+
+vorticity_confinement_epsilon = 0.0003
+XSPH_c = 0.01
+outputInterval = 40
+series_prefix = "./output/particle_object_output_{}.ply"
