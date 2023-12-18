@@ -10,12 +10,12 @@ dim = 3
 # gravity
 gravity = ti.Vector([0,-9.8,0])
 # time step slot
-time_delta = 1.0 / 200.0
+time_delta = 1.0 / 20.0
 # epsilon in equation
 epsilon = 1e-5
 
 # water tank parameters
-tank_width, tank_height, tank_depth = 50, 30, 30
+tank_width, tank_height, tank_depth = 50, 50, 30
 # boundary
 boundary = (tank_depth, tank_height, tank_width)
 
@@ -39,8 +39,8 @@ delta = particle_diameter * 3.5
 # The number of fluid particles
 fluid_blocks = 1
 fluid_block_loc = (0,0,0)
-fluid_blocks_1_start = [5,10,5]
-fluid_blocks_1_end = [15, 15, 15]
+fluid_blocks_1_start = [5,20,5]
+fluid_blocks_1_end = [30, 45, 30]
 
 fluid_blocks_1_x = len(np.arange(fluid_blocks_1_start[0], fluid_blocks_1_end[0], delta))
 fluid_blocks_1_y = len(np.arange(fluid_blocks_1_start[1], fluid_blocks_1_end[1], delta))
@@ -116,7 +116,7 @@ def compute_scorr(pos_ji):
     x = ti.pow(x,4)
     return (corrK) * x
 
-vorticity_confinement_epsilon = 0.0003
-XSPH_c = 0.01
+vorticity_confinement_epsilon = 0.3
+XSPH_c = 0.001
 outputInterval = 40
 series_prefix = "./output/particle_object_output_{}.ply"

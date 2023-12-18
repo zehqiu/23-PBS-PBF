@@ -28,7 +28,9 @@ class particle_system():
         self.particle_neighbors = ti.field(int)
         self.lambdas = ti.field(float)
         
-        # self.board_states = ti.Vector.field(dim, float)
+        # 0- x value, 1- board velocity, 2 - time
+        # self.board_states = ti.Vector.field(3,float)
+        self.board_states = ti.field(float)
         
         ti.root.dense(ti.i, N_fluid_particles).place(self.old_positions, self.positions, self.velocities, self.colors)
         grid_snode = ti.root.dense(ti.ijk, grid_size)
@@ -38,7 +40,7 @@ class particle_system():
         nb_node.place(self.particle_num_neighbors)
         nb_node.dense(ti.j, max_num_neighbors).place(self.particle_neighbors)
         ti.root.dense(ti.i, N_fluid_particles).place(self.lambdas, self.position_deltas)
-        # ti.root.place(self.board_states)    
+        ti.root.place(self.board_states)    
     
 
     def init_particles(self):
@@ -56,8 +58,9 @@ class particle_system():
             #                                i // (fluid_blocks_1_end[0] * fluid_blocks_1_end[2])]) * delta
             # for c in ti.static(range(dim)):
             # self.velocities[i] = ti.Vector([0, -10, 0])
-            # self.colors[i] = ti.Vector([0,0,1])
-        # self.board_states = ti.Vector([boundary[0] - epsilon, -0.0, 0.0])
+            self.colors[i] = ti.Vector([50/255,100/255,200/255])
+        # self.board_states = ti.Vector([0, 1, 0.0])
+        self.board_states[None] = 0.0
     
     def add_rigid_body(self,scale_factor=15.0,displacement_factor=[10,0,10]):
         mesh = tm.load(rigid_body_path)
@@ -73,14 +76,31 @@ class particle_system():
     # function handling boundary conditions
     @ti.func
     def confine_position_to_boundary(self,p):
-        bmin = particle_radius
+        bmin = ti.Vector([0,0,self.board_states[None]+epsilon])+particle_radius
         # bmax = ti.Vector([self.board_states[0], boundary[1]]) - particle_radius
         bmax = ti.Vector([boundary[0], boundary[1], boundary[2]]) - particle_radius
         for i in ti.static(range(dim)):
             # Use randomness to prevent particles from sticking into each other after clamping
-            if p[i] <= bmin:
-                p[i] = bmin + epsilon * ti.random()
+            if p[i] <= bmin[i]:
+                p[i] = bmin[i] + epsilon * ti.random()
             elif bmax[i] <= p[i]:
                 p[i] = bmax[i] - epsilon * ti.random()
         return p
+    
+    @ti.kernel
+    # Interaction: Move Board
+    def move_board(self,flag:int):
+        # probably more accurate to exert force on particles according to hooke's law.
+         # 0- x value, 1- board velocity, 2 - time
+        # self.board_states[1] = flag
+        vel_strength = 3
+        if 0 < self.board_states[None] + flag * time_delta * vel_strength < boundary[2] / 3:
+            self.board_states[None] = self.board_states[None] + flag * time_delta * vel_strength
+        print("flag:", flag)
+        print("board_states:", self.board_states[None])
+        
+    @ti.kernel
+    def add_random_velocities(self,k:int):
+        for i in range(N_fluid_particles):
+            self.velocities[i][k] += ti.random()
     

@@ -64,6 +64,10 @@ class pbf:
                             self.ps.particle_neighbors[p_i, nb_i] = p_j
                             nb_i += 1
             self.ps.particle_num_neighbors[p_i] = nb_i
+            # if(nb_i<=8):
+            #     self.ps.colors[p_i]=ti.Vector([1,1,1])
+            # else:
+            #     self.ps.colors[p_i]=ti.Vector([0,0,1])
 
     @ti.kernel
     def epilogue(self):
@@ -181,5 +185,5 @@ class pbf:
         for _ in range(pdf_num_iters):
             self.PBF_solver()
         self.epilogue()
-        # self.apply_vorticity_confinement()
-        # self.apply_xsph_viscosity()
+        self.apply_vorticity_confinement()
+        self.apply_xsph_viscosity()

@@ -64,6 +64,8 @@ run_simulate = 0
 step_count = 0
 output_as_ply = 0
 current_directory = os.path.dirname(os.path.realpath(__file__))
+movedir = 1
+time_period = 0
 
 while window.running:
     # 初始化设置
@@ -87,6 +89,9 @@ while window.running:
         run_simulate = 1
     if run_simulate == 1:
         step_count = step_count + 1
+        if time_period>=0:
+            time_period-=1
+            ps.move_board(movedir)
         solver.run_PBF()
     if export_as_ply:
         output_as_ply = 1
@@ -98,6 +103,7 @@ while window.running:
     
     # draw water-tank
     scene.lines(tank_vertex, width=3.0, indices=tank_edge, color=(0, 0, 0))
+    # scene.rect((0, 0),(ps.board_states[0] / boundary[0], 1),radius=1.5,color=boundary_color,)
     
     # keyboard event processing
     if window.get_event(ti.ui.PRESS):
@@ -108,8 +114,18 @@ while window.running:
     # if window.is_pressed(ti.ui.RIGHT, 'd'): gravity[None][0] = 1
     # if window.is_pressed(ti.ui.UP, 'w'): gravity[None][1] = 1
     # if window.is_pressed(ti.ui.DOWN, 's'): gravity[None][1] = -1
-    if window.is_pressed(ti.ui.LEFT): pass
-    if window.is_pressed(ti.ui.RIGHT): pass
+    if window.is_pressed('z'):
+        ps.add_random_velocities(2)
+    if window.is_pressed('c'):
+        ps.add_random_velocities(0)
+    if window.is_pressed('x'):
+        ps.add_random_velocities(1)
+    if window.is_pressed(ti.ui.LEFT): 
+        movedir = 1
+        time_period+=1
+    if window.is_pressed(ti.ui.RIGHT): 
+        movedir = -1
+        time_period+=1
     if window.is_pressed(ti.ui.UP): pass
     if window.is_pressed(ti.ui.DOWN): pass
     # print(gravity)
