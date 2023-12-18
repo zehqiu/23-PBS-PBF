@@ -64,10 +64,10 @@ class pbf:
                             self.ps.particle_neighbors[p_i, nb_i] = p_j
                             nb_i += 1
             self.ps.particle_num_neighbors[p_i] = nb_i
-            # if(nb_i<=8):
+            # if(0.7<self.ps.velocities[p_i][2]<0.8):
             #     self.ps.colors[p_i]=ti.Vector([1,1,1])
             # else:
-            #     self.ps.colors[p_i]=ti.Vector([0,0,1])
+            #     self.ps.colors[p_i]=ti.Vector([50/255,100/255,200/255])
 
     @ti.kernel
     def epilogue(self):
@@ -79,6 +79,13 @@ class pbf:
         for i in self.ps.positions:
             self.ps.velocities[i] = (self.ps.positions[i] - self.ps.old_positions[i]) / time_delta
         # no vorticity/xsph because we cannot do cross product in 2D...
+        
+        # add color
+        # for p_i in self.ps.positions:
+        #     if(8<ti.math.length(self.ps.velocities[p_i])<12):
+        #         self.ps.colors[p_i]=ti.Vector([1,1,1])
+        #     else:
+        #         self.ps.colors[p_i]=ti.Vector([50/255,100/255,200/255])
 
     @ti.kernel
     def apply_vorticity_confinement(self):

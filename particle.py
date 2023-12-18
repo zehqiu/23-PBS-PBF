@@ -44,7 +44,7 @@ class particle_system():
     
 
     def init_particles(self):
-        for i in range(N_fluid_particles):
+        for i in range(N_fluid_1_particles):
             y = i // (fluid_blocks_1_x * fluid_blocks_1_z)
             z = (i // fluid_blocks_1_x) % fluid_blocks_1_z
             x = i % (fluid_blocks_1_x)
@@ -58,7 +58,22 @@ class particle_system():
             #                                i // (fluid_blocks_1_end[0] * fluid_blocks_1_end[2])]) * delta
             # for c in ti.static(range(dim)):
             # self.velocities[i] = ti.Vector([0, -10, 0])
-            self.colors[i] = ti.Vector([50/255,100/255,200/255])
+            self.colors[i] = color1
+        for i in range(0, N_fluid_2_particles):
+            y = i // (fluid_blocks_2_x * fluid_blocks_2_z)
+            z = (i // fluid_blocks_2_x) % fluid_blocks_2_z
+            x = i % (fluid_blocks_2_x)
+            posx = fluid_blocks_2_start[0] + x * delta
+            posy = fluid_blocks_2_start[1] + y * delta
+            posz = fluid_blocks_2_start[2] + z * delta
+            self.positions[i+N_fluid_1_particles] = ti.Vector([posx, posy,posz])
+
+            # self.positions[i] = ti.Vector([i % fluid_blocks_1_end[0],
+            #                                i % (fluid_blocks_1_end[0] * fluid_blocks_1_end[2]),
+            #                                i // (fluid_blocks_1_end[0] * fluid_blocks_1_end[2])]) * delta
+            # for c in ti.static(range(dim)):
+            # self.velocities[i] = ti.Vector([0, -10, 0])
+            self.colors[i+N_fluid_1_particles] = color2
         # self.board_states = ti.Vector([0, 1, 0.0])
         self.board_states[None] = 0.0
     

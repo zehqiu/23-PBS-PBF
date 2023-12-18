@@ -39,18 +39,29 @@ delta = particle_diameter * 3.5
 # The number of fluid particles
 fluid_blocks = 1
 fluid_block_loc = (0,0,0)
-fluid_blocks_1_start = [5,20,5]
-fluid_blocks_1_end = [30, 45, 30]
+fluid_blocks_1_start = [5,15, 10]
+fluid_blocks_1_end = [30, 35, 20]
+fluid_blocks_2_start = [5,15, 30]
+fluid_blocks_2_end = [30, 35, 40]
 
 fluid_blocks_1_x = len(np.arange(fluid_blocks_1_start[0], fluid_blocks_1_end[0], delta))
 fluid_blocks_1_y = len(np.arange(fluid_blocks_1_start[1], fluid_blocks_1_end[1], delta))
 fluid_blocks_1_z = len(np.arange(fluid_blocks_1_start[2], fluid_blocks_1_end[2], delta))
+fluid_blocks_2_x = len(np.arange(fluid_blocks_2_start[0], fluid_blocks_2_end[0], delta))
+fluid_blocks_2_y = len(np.arange(fluid_blocks_2_start[1], fluid_blocks_2_end[1], delta))
+fluid_blocks_2_z = len(np.arange(fluid_blocks_2_start[2], fluid_blocks_2_end[2], delta))
 
-N_fluid_particles = 1
+N_fluid_1_particles = 1
+N_fluid_2_particles = 1
+
+color1 = ti.Vector([50/255,100/255,200/255])
+color2 = ti.Vector([50/255,200/255,100/255])
 
 for i in range(dim):
-    N_fluid_particles *= len(np.arange(fluid_blocks_1_start[i], fluid_blocks_1_end[i], delta))
+    N_fluid_1_particles *= len(np.arange(fluid_blocks_1_start[i], fluid_blocks_1_end[i], delta))
+    N_fluid_2_particles *= len(np.arange(fluid_blocks_2_start[i], fluid_blocks_2_end[i], delta))
 
+N_fluid_particles = N_fluid_1_particles + N_fluid_2_particles
 # pre-defined parameter
 max_num_particles_per_cell = 100
 max_num_neighbors = 100
@@ -117,6 +128,6 @@ def compute_scorr(pos_ji):
     return (corrK) * x
 
 vorticity_confinement_epsilon = 0.3
-XSPH_c = 0.001
+XSPH_c = 0.01
 outputInterval = 40
 series_prefix = "./output/particle_object_output_{}.ply"

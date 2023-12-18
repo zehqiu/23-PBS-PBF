@@ -99,6 +99,7 @@ while window.running:
     # 示范用例
     # 用per_vertex_color给颜色数组
     scene.particles(ps.positions, per_vertex_color=ps.colors,radius = particle_radius)
+    
     # scene.particles(ps.voxelized_points, color = (0.68, 0.26, 0.19), radius = particle_radius)
     
     # draw water-tank
