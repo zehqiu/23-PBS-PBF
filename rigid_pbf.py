@@ -41,16 +41,12 @@ class pbf:
             self.ps.grid_num_particles[I] = 0
         for I in ti.grouped(self.ps.particle_neighbors):
             self.ps.particle_neighbors[I] = -1
-
-        # update grid
+            
         for p_i in self.ps.positions:
             cell = get_cell(self.ps.positions[p_i])
-            # ti.Vector doesn't seem to support unpacking yet
-            # but we can directly use int Vectors as indices
             offs = ti.atomic_add(self.ps.grid_num_particles[cell], 1)
             self.ps.grid2particles[cell, offs] = p_i
 
-        # find particle neighbors
         for p_i in self.ps.positions:
             pos_i = self.ps.positions[p_i]
             cell = get_cell(pos_i)
@@ -76,7 +72,6 @@ class pbf:
         for i in self.ps.positions:
             if (i<self.ps.n_fluid_particles):
                 self.ps.velocities[i] = (self.ps.positions[i] - self.ps.old_positions[i]) / time_delta
-        # no vorticity/xsph because we cannot do cross product in 2D...
 
     @ti.kernel
     def PBF_solver(self):

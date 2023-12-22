@@ -5,9 +5,6 @@ import taichi as ti
 from particle import particle_system
 from config import *
 
-# @ti.data_oriented
-# class pbf():
-#     pass
 @ti.data_oriented
 class pbf:
     def __init__(self, ps):
@@ -45,8 +42,6 @@ class pbf:
         # update grid
         for p_i in self.ps.positions:
             cell = get_cell(self.ps.positions[p_i])
-            # ti.Vector doesn't seem to support unpacking yet
-            # but we can directly use int Vectors as indices
             offs = ti.atomic_add(self.ps.grid_num_particles[cell], 1)
             self.ps.grid2particles[cell, offs] = p_i
 
@@ -78,7 +73,6 @@ class pbf:
         # update velocities
         for i in self.ps.positions:
             self.ps.velocities[i] = (self.ps.positions[i] - self.ps.old_positions[i]) / time_delta
-        # no vorticity/xsph because we cannot do cross product in 2D...
         
         # add color
         # for p_i in self.ps.positions:

@@ -1,13 +1,11 @@
-# The GUI of our project. Containing the input and output setup.
+# The Entrance of our project. Containing the input and output setup.
 import taichi as ti
 from config import *
 from particle import particle_system
 from pbf import pbf
 import os
 
-ti.init(arch=ti.gpu)  # 确定后端
-
-# 初始化数据
+ti.init(arch=ti.gpu) 
 width, height = 900, 600
 color = (1.0, 1.0, 1.0)
 
@@ -48,7 +46,7 @@ def create_water_tank():
 
 create_water_tank()
 
-# 创建画布
+# scene setting
 window = ti.ui.Window(name='Position-Based Fluid Simulation', res = (width, height), fps_limit=200, pos = (150, 150))
 canvas = window.get_canvas()
 scene = ti.ui.Scene()
@@ -57,7 +55,7 @@ gui = ti.ui.Gui(window.get_gui())
 camera.position(100, 60, 30)
 camera.lookat(30, 20, 30)
 
-# 输入处理的示例(from https://docs.taichi-lang.cn/docs/ggui)
+# simulation parametres
 gravity = ti.Vector.field(2, ti.f32, shape=())
 attractor_strength = ti.field(ti.f32, shape=())
 run_simulate = 0
@@ -68,22 +66,19 @@ movedir = 1
 time_period = 0
 
 while window.running:
-    # 初始化设置
+    # initialization
     camera.track_user_inputs(window, movement_speed=0.03, hold_key=ti.ui.RMB)
     canvas.set_background_color((1, 1, 1))
     scene.set_camera(camera)
     scene.ambient_light((0.8, 0.8, 0.8))
     scene.point_light(pos=(5, 15, 15), color=(1, 1, 1))
     
-    # 小窗
+    # GUI
     with gui.sub_window("Sub Window", x=0, y=0, width=0.15, height=1):
         gui.text("Some interaction guidance")
         start_simulation = gui.button("Start Simulation")
         export_as_ply = gui.button("Export as PLY")
         reset_scene = gui.button("reset_scene")
-
-        # value = gui.slider_float("name1", value, minimum=0, maximum=100)
-        # color = gui.color_edit_3("name2", color)
     
     if start_simulation:
         run_simulate = 1
@@ -96,15 +91,11 @@ while window.running:
     if export_as_ply:
         output_as_ply = 1
         count_output = 0
-    # 示范用例
-    # 用per_vertex_color给颜色数组
+
     scene.particles(ps.positions, per_vertex_color=ps.colors,radius = particle_radius)
-    
-    # scene.particles(ps.voxelized_points, color = (0.68, 0.26, 0.19), radius = particle_radius)
     
     # draw water-tank
     scene.lines(tank_vertex, width=3.0, indices=tank_edge, color=(0, 0, 0))
-    # scene.rect((0, 0),(ps.board_states[0] / boundary[0], 1),radius=1.5,color=boundary_color,)
     
     # keyboard event processing
     if window.get_event(ti.ui.PRESS):
@@ -133,7 +124,7 @@ while window.running:
 
     # mouse event processing
     mouse = window.get_cursor_pos()
-    # ...
+
     if window.is_pressed(ti.ui.LMB):
         pass      
 

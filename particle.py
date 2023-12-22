@@ -95,7 +95,6 @@ class particle_system():
         # bmax = ti.Vector([self.board_states[0], boundary[1]]) - particle_radius
         bmax = ti.Vector([boundary[0], boundary[1], boundary[2]]) - particle_radius
         for i in ti.static(range(dim)):
-            # Use randomness to prevent particles from sticking into each other after clamping
             if p[i] <= bmin[i]:
                 p[i] = bmin[i] + epsilon * ti.random()
             elif bmax[i] <= p[i]:
@@ -103,7 +102,7 @@ class particle_system():
         return p
     
     @ti.kernel
-    # Interaction: Move Board
+    # Interaction: Moving Board
     def move_board(self,flag:int):
         # probably more accurate to exert force on particles according to hooke's law.
          # 0- x value, 1- board velocity, 2 - time

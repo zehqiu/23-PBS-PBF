@@ -1,12 +1,11 @@
-# The GUI of our project. Containing the input and output setup.
+# The Entry of our project. Containing the input and output setup.
 import taichi as ti
 from rigid_config import *
 from rigid_particle import particle_system
 from rigid_pbf import pbf
+import os
 
-ti.init(arch=ti.gpu)  # 确定后端
-
-# 初始化数据
+ti.init(arch=ti.gpu)
 width, height = 900, 600
 color = (1.0, 1.0, 1.0)
 
@@ -47,7 +46,7 @@ def create_water_tank():
 
 create_water_tank()
 
-# 创建画布
+# Scene Setting
 window = ti.ui.Window(name='Position-Based Fluid Simulation', res = (width, height), fps_limit=200, pos = (150, 150))
 canvas = window.get_canvas()
 scene = ti.ui.Scene()
@@ -56,39 +55,53 @@ gui = ti.ui.Gui(window.get_gui())
 camera.position(100, 60, 30)
 camera.lookat(30, 20, 30)
 
-# 输入处理的示例(from https://docs.taichi-lang.cn/docs/ggui)
+#simulation parameters
 gravity = ti.Vector.field(2, ti.f32, shape=())
 attractor_strength = ti.field(ti.f32, shape=())
 run_simulate = 0
+step_count = 0
+output_as_ply = 0
+current_directory = os.path.dirname(os.path.realpath(__file__))
 
 while window.running:
-    # 初始化设置
+    # initialization
     camera.track_user_inputs(window, movement_speed=0.03, hold_key=ti.ui.RMB)
     canvas.set_background_color((1, 1, 1))
     scene.set_camera(camera)
     scene.ambient_light((0.8, 0.8, 0.8))
     scene.point_light(pos=(5, 15, 15), color=(1, 1, 1))
     
-    # 小窗
+    # GUI
     with gui.sub_window("Sub Window", x=0, y=0, width=0.15, height=1):
         gui.text("Some interaction guidance")
-        select_point_mode = gui.button("Select Particles")
-        explosion_mode = gui.button("Explosion")
+        # select_point_mode = gui.button("Select Particles")
+        # explosion_mode = gui.button("Explosion")
+        start_simulation = gui.button("Start Simulation")
+        export_as_ply = gui.button("Export as PLY")
+        reset_scene = gui.button("reset_scene")
 
-        # value = gui.slider_float("name1"A, value, minimum=0, maximum=100)
-        # color = gui.color_edit_3("name2", color)
     
-    if select_point_mode:
+    # if select_point_mode:
+    #     run_simulate = 1
+    # if run_simulate == 1:
+    #     solver.run_PBF()
+
+    if start_simulation:
         run_simulate = 1
     if run_simulate == 1:
+        step_count = step_count + 1
+        # if time_period>=0:
+        #     time_period-=1
+        #     ps.move_board(movedir)
         solver.run_PBF()
-    # 示范用例
-    # 用per_vertex_color给颜色数组
+    if export_as_ply:
+        output_as_ply = 1
+        count_output = 0
 
     fluid_positions = ti.Vector.field(dim, dtype=float, shape=ps.n_fluid_particles)
     rigid_positions = ti.Vector.field(dim, dtype=float, shape=ps.n_rigid_particles)
 
-    # 将 self.positions 分割成两个数组
+    # particles into two categories
     fluid_positions.from_numpy(ps.positions.to_numpy()[:ps.n_fluid_particles])
     rigid_positions.from_numpy(ps.positions.to_numpy()[ps.n_fluid_particles:ps.n_total_particles])
     
@@ -118,6 +131,27 @@ while window.running:
     # ...
     if window.is_pressed(ti.ui.LMB):
         pass      
-        
+    
+    if reset_scene:
+        ps.init_particles()
+        step_count = 0
+        run_simulate = 0
+        output_as_ply = 0
+
+    if run_simulate==1:
+        if output_as_ply == 1:
+            if step_count % outputInterval == 0:
+                if(count_output==0):
+                    os.makedirs(os.path.join(current_directory,"output"), exist_ok=True)
+
+                np_pos = np.reshape((ps.positions.to_numpy())[:ps.n_fluid_particles * 3], (ps.n_fluid_particles, 3))
+                np_rgb = np.reshape((ps.colors.to_numpy())[:ps.n_fluid_particles * 3], (ps.n_fluid_particles, 3))
+                # create a PLYWriter
+                writer = ti.tools.PLYWriter(num_vertices=ps.n_fluid_particles)
+                writer.add_vertex_pos(np_pos[:, 0], np_pos[:, 1], np_pos[:, 2])
+                writer.add_vertex_color(
+                    np_rgb[:, 0], np_rgb[:, 1], np_rgb[:, 2])
+                writer.export_frame_ascii(count_output, os.path.join(current_directory,series_prefix))
+                count_output = count_output + 1
     canvas.scene(scene)
     window.show()
