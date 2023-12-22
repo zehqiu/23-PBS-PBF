@@ -74,25 +74,15 @@ while window.running:
     # GUI
     with gui.sub_window("Sub Window", x=0, y=0, width=0.15, height=1):
         gui.text("Some interaction guidance")
-        # select_point_mode = gui.button("Select Particles")
-        # explosion_mode = gui.button("Explosion")
         start_simulation = gui.button("Start Simulation")
         export_as_ply = gui.button("Export as PLY")
         reset_scene = gui.button("reset_scene")
 
-    
-    # if select_point_mode:
-    #     run_simulate = 1
-    # if run_simulate == 1:
-    #     solver.run_PBF()
 
     if start_simulation:
         run_simulate = 1
     if run_simulate == 1:
         step_count = step_count + 1
-        # if time_period>=0:
-        #     time_period-=1
-        #     ps.move_board(movedir)
         solver.run_PBF()
     if export_as_ply:
         output_as_ply = 1
